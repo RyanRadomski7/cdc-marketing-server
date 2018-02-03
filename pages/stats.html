@@ -1,0 +1,135 @@
+<h1>Status and Stats</h1>
+<h2>Power</h2>
+<h3>Generator</h3>
+Active: <span id="gen_status"></span>
+<div class="row-fluid">
+    <div class="span1">
+        <span id="gen_gauge"></span>
+    </div>
+    <div class="span1">
+        <span id="gen_gauge_wear"></span>
+    </div>
+    <div class="span10"></div>
+</div>
+<h3>Lines</h3>
+<p>
+    Current Loads
+</p>
+<div class="row-fluid">
+    <div class="span1">
+        <span id="line1"></span>
+    </div>
+    <div class="span1">
+        <span id="line2"></span>
+    </div>
+    <div class="span1">
+        <span id="line3"></span>
+    </div>
+    <div class="span9"></div>
+</div>
+<h2>Water</h2>
+<span id="water_qual"></span>
+
+<script src="../jquery-3.2.1.min.js"></script>
+<script src="../bootstrap/js/bootstrap.min.js"></script>
+<script src="../loader.js"></script>
+<script>
+    var hmi_url = "http://10.0.146.90";
+    var gen_status, gen_power, gen_max_power, gen_wear;
+
+    google.charts.load('current', {'packages':['gauge']});
+    google.charts.setOnLoadCallback(powerGauge);
+    google.charts.setOnLoadCallback(loadsGauges);
+    google.charts.setOnLoadCallback(waterQual);
+
+
+
+    function powerGauge() {
+        $.getJSON(hmi_url + '/generator', function (data) {
+            var gen_json = data;
+            gen_status = gen_json.operational;
+            document.getElementById("gen_status").textContent = gen_status;
+            gen_power = gen_json.power;
+            gen_max_power = gen_json.max_power;
+            gen_wear = gen_json.wear;
+            // Gen Gauge
+            var data2 = google.visualization.arrayToDataTable([
+                ['Label', 'Value'], ['Power', gen_power]]);
+            var options = {
+                width: 800, height: 240,
+                redFrom: gen_max_power, redTo: gen_max_power + 10,
+                yellowFrom: 110, yellowTo: 120,
+                minorTicks: 5,
+                max: gen_max_power + 10
+            };
+            var gen_gauge = new google.visualization.Gauge(document.getElementById('gen_gauge'));
+            gen_gauge.draw(data2, options);
+
+            // Wear Gauge
+            var options2 = {
+                width: 800, height: 240,
+                redFrom: 95, redTo: 120,
+                yellowFrom: 75, yellowTo: 95,
+                minorTicks: 5,
+                max:  120
+            };
+
+           var data3 = google.visualization.arrayToDataTable([
+               ['Label', 'Value'], ['Wear', gen_wear * 100]]);
+
+           var gen_gauge_wear = new google.visualization.Gauge(document.getElementById('gen_gauge_wear'));
+           gen_gauge_wear.draw(data3, options2);
+
+        });
+    }
+
+    setInterval(powerGauge, 5000);
+    
+    
+    function loadsGauges() {
+        $.getJSON(hmi_url + '/loads', function (data) {
+            var options = {
+                width: 800, height: 240,
+                redFrom: 100, redTo: 120,
+                yellowFrom: 90, yellowTo: 100,
+                minorTicks: 5,
+                max:  140
+            };
+            var line1 = new google.visualization.Gauge(document.getElementById('line1'));
+            var line2 = new google.visualization.Gauge(document.getElementById('line2'));
+            var line3 = new google.visualization.Gauge(document.getElementById('line3'));
+
+            var data1 = google.visualization.arrayToDataTable([
+                ['Label', 'Value'], ['Line 1', data[0].current_load * 1]]);
+            var data2 = google.visualization.arrayToDataTable([
+                ['Label', 'Value'], ['Line 1', data[1].current_load * 1]]);
+            var data3 = google.visualization.arrayToDataTable([
+                ['Label', 'Value'], ['Line 1', data[2].current_load * 1]]);
+            line1.draw(data1, options);
+            line2.draw(data2, options);
+            line3.draw(data3, options);
+        });
+    }
+    setInterval(loadsGauges, 5000);
+
+    function waterQual() {
+        $.getJSON('/water', function (data) {
+            var value = Number(data) * 100;
+            console.log(data);
+            var water_qual = new google.visualization.Gauge(document.getElementById('water_qual'));
+            var data1 = google.visualization.arrayToDataTable([
+                ['Label', 'Value'], ['Water Quality', value]]);
+            var options = {
+                width: 800, height: 240,
+                redFrom: 0, redTo: 90,
+                yellowFrom: 90, yellowTo: 98,
+                greenFrom: 98, greenTo: 100,
+                minorTicks: 5,
+                max: 100
+            };
+            water_qual.draw(data1, options);
+        });
+    }
+
+    setInterval(waterQual, 5000);
+</script>

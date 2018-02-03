@@ -1,0 +1,26 @@
+<h3>Leave A Comment</h3>
+<label for="name">Name</label>
+<input id="name" type="text" />
+<br />
+<label for="comment">Comment</label>
+<textarea id="comment"></textarea>
+<button id="bigbutton">Comment</button>
+
+<script src="jquery-3.2.1.min.js"></script>
+<script>
+    $(document).ready(function () {
+        var bb = $("#bigbutton").click(function () {
+            var name = $('#name').val();
+            var comment = $('#comment').val();
+            var data = "<h4>" + name + "</h4><br/>" + comment;
+	    $("#comments").append(data);
+            $.post('/postComment', data);
+            $('#name').val("");
+            $('#comment').val("");
+        });
+        bb.success = function () {
+            location.reload();
+        };
+
+    })
+</script>

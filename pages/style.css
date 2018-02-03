@@ -1,0 +1,9 @@
+body {
+    font-family: 'Comic Sans MS', 'Comic Sans', cursive;
+    background: #fcf9c2;
+}
+
+nav li {
+    display: inline;
+    padding-right: 10px;
+}
